@@ -31,3 +31,5 @@ Note the datasheet has config variables in binary. i.e. a data rate of 250 SPS i
 TODO: (help appreciated)
 * add continuous mode
 * add support for the built in SPI pins
+
+Thanks to the people [on this forum](https://forums.adafruit.com/viewtopic.php?f=19&t=32086&start=15#p372992) for the type K thermocouple linearization code. 
