@@ -5,15 +5,15 @@ The [ADS118](http://www.ti.com/lit/ds/symlink/ads1118.pdf) uses the SPI protocol
 
 ## Using a single chip
 
-Example use: read and print the temperature from a type K thermocouple connected to A2 and A3, once per second:
+Example use: read and print the temperature from a type K thermocouple connected to A2 and A3. A thermocouple's output voltage is related to the difference in temperature between the two ends of the wire. So in order to convert that to a temperature, the temperature of the "cold junction" (meaning the point where the thermocouple is connected to the measurement device) is needed. We can use the ADS1118's built in high accuracy thermometer for this. This code reads the internal thermometer and the thermocouple voltage once per second, and converts that to a temperature:
 
 ```python
 import time
 import ADS1118
 
 # create the config registers
-int_temp = ADS1118.encode(single_shot=True, temp_sensor=True, data_rate=5) # internal temperature
-tc = ADS1118.encode(single_shot=True, multiplex=3, gain=7, data_rate=5) # thermocouple connected to A2/A3
+int_temp = ADS1118.encode(single_shot=True, temp_sensor=True, data_rate=5) # internal temperature of the ADS1118
+tc = ADS1118.encode(single_shot=True, multiplex=3, gain=7, data_rate=5) # voltage from the thermocouple connected to A2/A3
 
 ads = ADS1118.ADS1118(SCLK=4, DOUT=27, DIN=22) # set the GPIO pins
 
