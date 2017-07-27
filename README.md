@@ -1,7 +1,61 @@
 # ADS1118
 A python interface to bit bang the ADS1118 chip from a Raspberry Pi. Single shot mode only for now. Optimized for my use: reading a temperature from a type K thermocouple.
 
-The [ADS118](http://www.ti.com/lit/ds/symlink/ads1118.pdf) uses the SPI protocol. Since the SPI pins on my Raspberry Pi were occupied by the touch screen, this library uses normal GPIO pins instead (ie "bit bang"). 
+The [ADS1118](http://www.ti.com/lit/ds/symlink/ads1118.pdf) uses the SPI protocol. Since the SPI pins on my Raspberry Pi were occupied by the touch screen, this library uses normal GPIO pins instead (ie "bit bang"). 
+
+## Configuration register arguments
+
+This library is only capable of single shot measurements, so `single_shot=True` must be in every config register.
+
+---
+
+The `temp_sensor` argument switches between voltage measurement mode (default) and internal temperature sensor measurement mode. 
+
+---
+
+The `gain` value sets the programmable gain amplifier. This needs to be set higher than the maximum voltage you will need to measure. Note the ADS1118 cannot measure a voltage higher than the input voltage (eg if VIN is supplied with 3.3 V, then the maximum measurement will be 3.3 V). 
+
+| Gain Value | Full Range |
+| ------------- | ------------- |
+| 0  | ± 6.144 volts  |
+| 1  | ± 4.096 |
+| 2 (default) | ± 2.048 |
+| 3  | ± 1.024 |
+| 4  | ± 0.512 |
+| 5, 6, 7  | ± 0.256 |
+
+---
+
+The `data_rate` value sets the time it takes to do a single measurement. A faster data rate (more samples per second) increases the noise in each sample. For the highest quality data, choose a low data rate. 
+
+
+| Data Rate Value | Samples per Second | Time per measurement
+| ------------- | ------------- | ------------- |
+| 0  | 8  | 125.0 ms
+| 1  | 16  | 62.5
+| 2  | 32 | 31.3
+| 3  | 64  | 15.6
+| 4 (default) | 128  | 7.81
+| 5  | 250 | 4.00
+| 6  | 475  | 2.11
+| 7  | 860  | 1.12
+
+---
+
+The `multiplex` argument controls the internal multiplexer, which controls which input is measured. 
+
+| Multiplex Value | Positive | Negative |
+| ------------- | ------------- | ------------- |
+| 0 (default) | AIN0  | AIN1
+| 1  | AIN0 | AIN3
+| 2  | AIN1 | AIN3
+| 3  | AIN2 | AIN3
+| 4  | AIN0 | ground
+| 5  | AIN1 | ground
+| 6  | AIN2 | ground
+| 7  | AIN3 | ground
+
+
 
 ## Using a single chip
 
@@ -30,7 +84,7 @@ It would be wired like this:
 ![single connection](single.png)
 
 ## Using more than one chip with common data lines
-More than one ADS1118 chip can use the data lines if you use a CS line for every chip. The CS line specifys which chip is currently active. Be sure that you don't try to read from more than one chip at a time. 
+More than one ADS1118 chip can use the data lines if you use a CS line for every chip. The CS line specifies which chip is currently active. Be sure that you don't try to read from more than one chip at a time. 
 
 ```python
 chip1 = ADS1118.ADS1118(SCLK=4, DOUT=27, DIN=22, CS=17)
@@ -40,14 +94,14 @@ chip2 = ADS1118.ADS1118(SCLK=4, DOUT=27, DIN=22, CS=23)
 ![common data lines](double.png)
 
 
-## Using more than one chip with independant data lines
+## Using more than one chip with independent data lines
 You can also assign data lines to each chip. This is useful if you want to read data from both at the same time. 
 
 ```python
 chip1 = ADS1118.ADS1118(SCLK=4, DOUT=27, DIN=22)
 chip2 = ADS1118.ADS1118(SCLK=5, DOUT=6, DIN=13)
 ```
-![independant data lines](double2.png)
+![independent data lines](double2.png)
 
 ## Notes
 * the datasheet has config variables in binary. i.e. a data rate of 250 SPS is listed as "101", which is 5 in decimal. So you need to use `5` or specify binary with `0b101`. 
