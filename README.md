@@ -1,5 +1,5 @@
 # ADS1118
-A python interface to bit bang the ADS1118 chip from a Raspberry Pi. Single shot mode only for now. Optimized for my use: reading a temperature from a type K thermocouple.
+A python interface to bit bang the ADS1118 chip from a Raspberry Pi. Single shot mode only for now. Also includes a conversion table for type K thermocouples.
 
 The [ADS1118](http://www.ti.com/lit/ds/symlink/ads1118.pdf) uses the SPI protocol. Since the SPI pins on my Raspberry Pi were occupied by the touch screen, this library uses normal GPIO pins instead (ie "bit bang"). 
 
@@ -62,19 +62,26 @@ The `multiplex` argument controls the internal multiplexer, which controls which
 Example use: read and print the temperature from a type K thermocouple connected to A2 and A3. A thermocouple's output voltage is related to the difference in temperature between the two ends of the wire. So in order to convert that to a temperature, the temperature of the "cold junction" (meaning the point where the thermocouple is connected to the measurement device) is needed. We can use the ADS1118's built in high accuracy thermometer for this. This code reads the internal thermometer and the thermocouple voltage once per second, and converts that to a temperature:
 
 ```python
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# works with python2 or python3
+
 import time
 import ADS1118
+import typek
 
 # create the config registers
-int_temp = ADS1118.encode(single_shot=True, temp_sensor=True, data_rate=5) # internal temperature of the ADS1118
-tc = ADS1118.encode(single_shot=True, multiplex=3, gain=7, data_rate=5) # voltage from the thermocouple connected to A2/A3
+int_temp = ADS1118.encode(single_shot=True, temp_sensor=True, data_rate=5) # internal temperature
+tc = ADS1118.encode(single_shot=True, multiplex=3, gain=7, data_rate=5) # thermocouple connected to A2/A3
 
-ads = ADS1118.ADS1118(SCLK=4, DOUT=27, DIN=22) # set the GPIO pins
+ads = ADS1118.ADS1118(SCLK=17, DIN=18, DOUT=27) # set the GPIO pins
 
 while True:
     start = time.time()
     ref_temp, tc_voltage = ads.read(int_temp, tc) # read data
-    temp = ADS1118.TC_linearize(ref_temp, tc_voltage) # convert to temperature
+    tc_mV = tc_voltage * 1000 # convert to millivolts
+    temp = typek.get_temp(ref_temp, tc_mV) # convert to temperature
     print("thermocouple temperature is {:.2f}°C (took {:.4f} ms)".format(temp, (time.time()-start)*1000.))
     time.sleep(1)
 ```
