@@ -240,10 +240,11 @@ def TC_linearize(coldJunctionTemperature, thermocoupleVoltage):
     to calculate actual temperature.
 
     :coldJunctionTemperature: temperature of the TC junction in degrees C
-    :thermocoupleVoltage: reading from the thermocouple in millivolts
+    :thermocoupleVoltage: reading from the thermocouple in volts
 
     :returns: the temperature of the themocouple in degrees C
     '''
+    thermocoupleVoltage *= 1000.
     coldJunctionVoltage = (-0.176004136860E-01 +
         0.389212049750E-01  * coldJunctionTemperature +
         0.185587700320E-04  * math.pow(coldJunctionTemperature, 2.0) +
