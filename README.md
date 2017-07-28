@@ -114,6 +114,20 @@ chip2 = ADS1118.ADS1118(SCLK=5, DOUT=6, DIN=13)
 * the datasheet has config variables in binary. i.e. a data rate of 250 SPS is listed as "101", which is 5 in decimal. So you need to use `5` or specify binary with `0b101`. 
 * The Raspberry Pi documentation refers to DIN as "MOSI" (master out, slave in) and DOUT as "MISO" (master in, slave out). Other documents may refer to CS as "SS" (slave select). 
 * Although the ADS1118 claims it can handle up to 5.5 V, when I tried it the output was mangled. Using 3.3 V power from the Pi fixed that. I assume it has to do with reading 5V TTL logic, so a voltage divider on DOUT may fix that.
+* The ADS1118 documentation often presents values in hex format. For instance, the default config register is given as "058Bh". The "h" on the end indicates hex (base 16) notation. The remaining values can be converted with the `binascii` module, and transformed into a config register with the included `bytearray_to_list()` function:
+
+```python
+import binascii
+config = ADS1118.bytearray_to_list(binascii.unhexlify('058B'))
+```
+
+* Conversely, if you want to encode your config into the 2-byte hex format:
+
+```python
+import binascii
+tc = ADS1118.encode(single_shot=True, multiplex=3, gain=7, data_rate=5) # thermocouple connected to A2/A3
+print(binascii.hexlify(ADS1118.list_to_bytearray(tc))) # prints 'bfab'
+```
 
 ## TODO
 (help appreciated)
