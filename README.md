@@ -42,7 +42,7 @@ The `data_rate` value sets the time it takes to do a single measurement. A faste
 
 ---
 
-The `multiplex` argument controls the internal multiplexer, which controls which input is measured. 
+The `multiplex` argument controls the internal multiplexer, which controls which input is measured. (Standard Type K Thermocouples use yellow for positive and red for negative.)
 
 | Multiplex Value | Positive | Negative |
 | ------------- | ------------- | ------------- |
@@ -134,4 +134,3 @@ print(binascii.hexlify(ADS1118.list_to_bytearray(tc))) # prints 'bfab'
 * add continuous mode
 * add support for the built in SPI pins
 
-Thanks to the people [on this forum](https://forums.adafruit.com/viewtopic.php?f=19&t=32086&start=15#p372992) for the type K thermocouple linearization code. 
