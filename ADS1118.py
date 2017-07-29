@@ -16,15 +16,26 @@ class ConnectionError(Exception):
     pass
 
 def int_to_list(data, bits=8):
+    """converts an integer to a big-endian list of booleans
+        >>> int_to_list(187)
+        [1, 0, 1, 1, 1, 0, 1, 1]
+    """
     return [data >> i & 1 for i in range(bits-1, -1, -1)]
 
 def list_to_int(data):
+    """converts a big-endian list of booleans to an integer
+        >>> list_to_int([1, 0, 1, 1, 1, 0, 1, 1])
+        187
+    """
     return sum(val << i for i, val in enumerate(reversed(data)))
 
+# the bytearray functions are not needed, but may be useful if anyone has commands
+# in the more traditional 2-byte form.
 def list_to_bytearray(data):
     return bytearray(list_to_int(data[i:i+8]) for i in range(0, len(data), 8))
 
 def bytearray_to_list(data):
+    data = bytearray(data)
     return sum(map(int_to_list, data), [])
 
 def bytearray_to_int(data):
@@ -90,17 +101,24 @@ def decode(data):
         operation = bool(data[13]))
 
 def convert(data, lsb_size):
-    '''convert a data block into a number using binary twos complement
+    '''convert a data block into a number
     :data: a list of bits
     :lsb_size: the value of the least significant bit'''
-    if data[0]:
+    if data[0]: #negative value, use binarys two's complement
         data = [not x for x in data]
         return -(lsb_size * (list_to_int(data) + 1))
     else:
         return lsb_size * list_to_int(data)
 
 def interpret(config, data):
-    '''use the config to interpret the data'''
+    '''convert the data block to a meaningful value.
+
+    :config:
+      the config that was sent or that was echoed (should be the same)
+      this is used to determine how the data should be interpreted
+    :data:
+      the data block from the ADS1118 as a length 16 list of booleans
+    '''
     if config[11]: # temp measurement
         # convert a data block into a temperature, returns degrees C
         return convert(data[:14], 0.03125)
@@ -111,6 +129,9 @@ def interpret(config, data):
 
 def verify(command, config):
     '''
+    compares the command sent to the echoed config returned from the ADS1118.
+    If they don't match then there was a communications problem.
+
     if the sum of bits is zero than the ADS1118 is likely not connected
     if the sum is non-zero then you probably have more than one instance running
     '''
@@ -174,7 +195,7 @@ class ADS1118(object):
         # another method to accomplish the same
         # this method is slower than above, and slower than the pause function
         # in addition it has the tendancy to corrupt data
-        # I left this in here to prove I've tested it 
+        # I left this in here to prove I've tested it
         #~ if GPIO.input(self.DOUT):
             #~ GPIO.wait_for_edge(self.DOUT, GPIO.FALLING, timeout=40)
 
@@ -191,9 +212,9 @@ class ADS1118(object):
           :config: the current command echoed back from the ADS1118
           :data: the result from the _PREVIOUS_ call'''
 
-        assert isinstance(command, (tuple, list)), "command must be a list"
-        assert len(command) >= 16 and len(command) % 16 == 0, "command must have a multiple of 16 elements"
-        assert all(x in (0,1) for x in command), "command must be a list of booleans"
+        #~ assert isinstance(command, (tuple, list)), "command must be a list"
+        #~ assert len(command) >= 16 and len(command) % 16 == 0, "command must have a multiple of 16 elements"
+        #~ assert all(x in (0,1) for x in command), "command must be a list of booleans"
 
         if self.CS:
             GPIO.output(self.CS, GPIO.LOW)
@@ -231,10 +252,10 @@ class ADS1118(object):
             else:
                 self.wait()
         responses.append(self._read(INT_TEMP)) # dummy command to get the last data value
+
         configs, datas = zip(*responses)
         results = []
         for command, config, data in zip(commands, configs, datas[1:]): # skip the first data since it's residual
             results.append(interpret(config, data))
             verify(command, config)
         return results
-        
